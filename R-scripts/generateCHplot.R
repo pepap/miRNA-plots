@@ -182,7 +182,7 @@ pep.compMIRdt <-
 }
 # <<<<<<<<<<
 
-pdf( file=paste0("CHPLOTs/dYEL-vs-dGRN.pdf"),width=15,height=5 )
+pdf( file=paste0("CHPLOTs/dYEL-vs-dGRN-",format(Sys.time(), "%Y%m%d",".pdf"),width=15,height=5 )
  par( bg="white",mfrow=c(1,3) )
 
   pep.compMIRdt(
