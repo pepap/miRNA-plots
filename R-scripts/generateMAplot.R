@@ -118,7 +118,7 @@ x.lab=c("0","10^1","10^2","10^3","10^4","10^5","10^6","10^7")
 y.lim=c(-6.50,+4.00)
 
 for ( GNTP in c( "dYEL","dGRN" ) ) {
- pdf( file=paste0("MAPLOTs/MAplot-",GNTP,"-",pepDate(),".pdf"),  width=50,height=15,pointsize=30 )
+ pdf( file=paste0("MAPLOTs/MAplot-",GNTP,"-",format(Sys.time(), "%Y%m%d"),".pdf"),  width=50,height=15,pointsize=30 )
   par( bg="white",mfrow=c(1,3) )
   
   otmp_data <-
