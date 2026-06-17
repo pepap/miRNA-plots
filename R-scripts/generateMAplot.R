@@ -135,7 +135,7 @@ for ( GNTP in c( "dYEL","dGRN" ) ) {
    pep.mirMAplot(
     MIRDT   = get(paste0(GNTP,".dt")),
     xTYPE   = "miRNA",
-    TIT     = paste0(GNTP," : main miRNAs"),
+    TIT     = paste0(GNTP," : main strand"),
     lfcLIM  = y.lim,
     xLIM    = x.lim,
     xLAB    = x.lab,
