@@ -46,6 +46,8 @@ source("R-scripts/generateCHplot.R")
 ```
 
 ## <ins>Biotype-boxplots</ins>
+The input counts were calculated as described [previously] (https://github.com/pepap/sRNAseq--trim-collapse-map-count). The annotation of the genes was taken from [mouse GENCODE, release M15](https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M15/gencode.vM15.chr_patch_hapl_scaff.basic.annotation.gtf.gz) and the repeats were annotated using the [RepeatMasker](http://
+www.repeatmasker.org/).
 
 
 
