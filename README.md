@@ -55,15 +55,9 @@ ANN.gr <- readRDS( "input_files/ANN.gr.rda" )
 load( "input_files/RM.mm10.dt.rda",verbose=T )
 
 aBAMS <- c(
- "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/04.dG-A1/dG-A1.se.Aligned.sortedByCoord.out.bam",
- "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/05.dG-B2/dG-B2.se.Aligned.sortedByCoord.out.bam",
- "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/06.dG-C4/dG-C4.se.Aligned.sortedByCoord.out.bam",
- "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/10.SOM-4/SOM-4.se.Aligned.sortedByCoord.out.bam",
- "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/11.SOM-11/SOM-11.se.Aligned.sortedByCoord.out.bam",
- "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/12.SOM-12/SOM-12.se.Aligned.sortedByCoord.out.bam",
- "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/13.dY-D1/dY-D1.se.Aligned.sortedByCoord.out.bam",
- "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/14.dY-A3/dY-A3.se.Aligned.sortedByCoord.out.bam",
- "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/15.dY-A2/dY-A2.se.Aligned.sortedByCoord.out.bam"
+ "/path/to/dGRN.r1_collapsed.bam","/path/to/dGRN.r2_collapsed.bam","/path/to/dGRN.r3_collapsed.bam",
+ "/path/to/SOM.r1_collapsed.bam", "/path/to/SOM.r2_collapsed.bam", "/path/to/SOM.r3_collapsed.bam",
+ "/path/to/dYEL.r1_collapsed.bam","/path/to/dYEL.r2_collapsed.bam","/path/to/dYEL.r3_collapsed.bam"
 )
 aCONS <- c( "dGRN.r1","dGRN.r2","dGRN.r3", "SOM.r1","SOM.r2","SOM.r3", "dYEL.r1","dYEL.r2","dYEL.r3" )
 
@@ -128,7 +122,29 @@ fracSums.dt <-
 
 O.DT <- data.table( dCATs=c("miRNA","mRNA","tRNA","rRNA","other","unknown") )
 
+for ( delLOOP in c( "SOM","dGRN","dYEL" ) ) {
 
+ cat( " ** ",delLOOP," **\n",sep="" )
+ stdLIBs <- libs.dt[ grepl( pattern=paste0("^",        delLOOP,"[-]"),x=libname ),libname ]
+
+ for ( sL in stdLIBs ) {
+  PLOT.MAT                     <-
+   as.matrix( x=fracSums.dt[,c("dGcats",paste0( gsub( "[-]","_",sL ),c(".21",".22",".23") )),with=F],rownames="dGcats" )[ c("miRNA","mRNA","tRNA","rRNA","other","not_annotated"), ]
+  rownames(PLOT.MAT)[ rownames(PLOT.MAT)=="not_annotated" ] <- "unknown"
+  O.DT                         <- cbind( O.DT,data.table( LIB=rowSums(PLOT.MAT)/sum(PLOT.MAT) ) )
+  colnames(O.DT)[ ncol(O.DT) ] <- sL
+  PLOT.MAT                     <- ( PLOT.MAT / libs.dt[ libname==sL,libsize ] )*1e06
+
+ }
+
+}
+
+library(openxlsx)
+
+xwb <- createWorkbook()
+addWorksheet(   wb=xwb,sheetName="readLen21to23nt"                                                                             )
+writeDataTable( wb=xwb,sheet=    "readLen21to23nt",x=O.DT,colNames=T,rowNames=F,headerStyle=createStyle(textDecoration="bold") )
+saveWorkbook(   wb=xwb,file=paste0("BIotype-boxplot-data-",format(Sys.time(), "%Y%m%d"),".xlsx"),overwrite=T                      )
 
 ```
 
