@@ -113,7 +113,7 @@ dir.create("MAPLOTs",showWarnings=F)
 
 x.lim=c(0.0,7.0)
 x.lab=c("0","10^1","10^2","10^3","10^4","10^5","10^6","10^7")
-y.lim=c(-8.00,+8.00)
+y.lim=c(-6.50,+4.00)
 
 for ( GNTP in c( "dYEL","dGRN" ) ) {
  pdf( file=paste0("MAPLOTs/MAplot-",GNTP,"-",pepDate(),".pdf"),  width=50,height=15,pointsize=30 )
