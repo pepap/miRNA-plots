@@ -125,7 +125,7 @@ O.DT <- data.table( dCATs=c("miRNA","mRNA","tRNA","rRNA","other","unknown") )
 for ( delLOOP in c( "SOM","dGRN","dYEL" ) ) {
 
  cat( " ** ",delLOOP," **\n",sep="" )
- stdLIBs <- libs.dt[ grepl( pattern=paste0("^",        delLOOP,"[-]"),x=libname ),libname ]
+ stdLIBs <- libs.dt[ grepl( pattern=paste0("^",delLOOP),x=libname ),libname ]
 
  for ( sL in stdLIBs ) {
   PLOT.MAT                     <-
@@ -144,7 +144,7 @@ library(openxlsx)
 xwb <- createWorkbook()
 addWorksheet(   wb=xwb,sheetName="readLen21to23nt"                                                                             )
 writeDataTable( wb=xwb,sheet=    "readLen21to23nt",x=O.DT,colNames=T,rowNames=F,headerStyle=createStyle(textDecoration="bold") )
-saveWorkbook(   wb=xwb,file=paste0("BIotype-boxplot-data-",format(Sys.time(), "%Y%m%d"),".xlsx"),overwrite=T                      )
+saveWorkbook(   wb=xwb,file=paste0("Biotype-boxplot-data-",format(Sys.time(), "%Y%m%d"),".xlsx"),overwrite=T                   )
 
 ```
 
