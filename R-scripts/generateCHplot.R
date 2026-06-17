@@ -189,19 +189,19 @@ pdf( file=paste0("CHPLOTs/dYEL-vs-dGRN.pdf"),width=15,height=5 )
    RES1=dYEL.dt,RES2=dGRN.dt,
    MIRTRON=T,pLEG="topleft",pSTAT="bottomright",tLEG=c( "only dYEL sig.","only dGRN sig.","both sig." ),
    SUFF=c( "_dYEL","_dGRN" ),
-   xTYPE="all",TIT="dYEL vs. dGRN (all miRNAs)")
+   xTYPE="all",TIT="dYEL vs. dGRN (all miRNAs)"
   )
   pep.compMIRdt(
    RES1=dYEL.dt,RES2=dGRN.dt,
    MIRTRON=T,pLEG="topleft",pSTAT="bottomright",tLEG=c( "only dYEL sig.","only dGRN sig.","both sig." ),
    SUFF=c( "_dYEL","_dGRN" ),
-   xTYPE="miRNA",TIT="dYEL vs. dGRN (main strand)")
+   xTYPE="miRNA",TIT="dYEL vs. dGRN (main strand)"
   )
   pep.compMIRdt(
    RES1=dYEL.dt,RES2=dGRN.dt,
    MIRTRON=T,pLEG="topleft",pSTAT="bottomright",tLEG=c( "only dYEL sig.","only dGRN sig.","both sig." ),
    SUFF=c( "_dYEL","_dGRN" ),
-   xTYPE="miRNA*",TIT="dYEL vs. dGRN (passengers)")
+   xTYPE="miRNA*",TIT="dYEL vs. dGRN (passengers)"
   )
 
 dev.off()
