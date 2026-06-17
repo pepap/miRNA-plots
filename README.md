@@ -46,8 +46,91 @@ source("R-scripts/generateCHplot.R")
 ```
 
 ## <ins>Biotype-boxplots</ins>
-The input counts were calculated as described [previously] (https://github.com/pepap/sRNAseq--trim-collapse-map-count). The annotation of the genes was taken from [mouse GENCODE, release M15](https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M15/gencode.vM15.chr_patch_hapl_scaff.basic.annotation.gtf.gz) and the repeats were annotated using the [RepeatMasker](http://
-www.repeatmasker.org/).
+The input counts were calculated as described [previously](https://github.com/pepap/sRNAseq--trim-collapse-map-count). The annotation of the genes was taken from [mouse GENCODE, release M15](https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M15/gencode.vM15.chr_patch_hapl_scaff.basic.annotation.gtf.gz) and the repeats were annotated using the [RepeatMasker](http://www.repeatmasker.org/).
+
+```
+library(scales)
+
+source("https://github.com/pepap/sRNAseq--trim-collapse-map-count/blob/799027911cfe166e2817b02a070a35f58df5d46d/03.01.collapsedBam2counts.R")
+
+ANN.gr <- readRDS( "input_files/ANN.gr.rda" )
+load( "input_files/RM.mm10.dt.rda",verbose=T )
+
+aBAMS <- c(
+ "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/04.dG-A1/dG-A1.se.Aligned.sortedByCoord.out.bam",
+ "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/05.dG-B2/dG-B2.se.Aligned.sortedByCoord.out.bam",
+ "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/06.dG-C4/dG-C4.se.Aligned.sortedByCoord.out.bam",
+ "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/10.SOM-4/SOM-4.se.Aligned.sortedByCoord.out.bam",
+ "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/11.SOM-11/SOM-11.se.Aligned.sortedByCoord.out.bam",
+ "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/12.SOM-12/SOM-12.se.Aligned.sortedByCoord.out.bam",
+ "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/13.dY-D1/dY-D1.se.Aligned.sortedByCoord.out.bam",
+ "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/14.dY-A3/dY-A3.se.Aligned.sortedByCoord.out.bam",
+ "/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/15.dY-A2/dY-A2.se.Aligned.sortedByCoord.out.bam"
+)
+aCONS <- c( "dGRN.r1","dGRN.r2","dGRN.r3", "SOM.r1","SOM.r2","SOM.r3", "dYEL.r1","dYEL.r2","dYEL.r3" )
+
+MINOVRL=15
+#> remove spliced reads
+RMV.SPL=as.logical("TRUE")
+#> remove soft-clipped reads
+RMV.SCL=as.logical("FALSE")
+#> read-length range
+RLENRAN=c(21,23)
+#> all reads used as the normalization factor
+RLENORM=c(19,32)
+#> allowed number of edit distances
+NMRANGE=c(0,100)
+
+frac.dt <- data.table( biotype=unique(RM.mm10.dt[["RM_NAMES"]]) )
+libs.dt <- data.table()
+objs.ls <- c()
+for ( i in seq_along(aBAMS) ) {
+
+ cat( " -> Loading sample : ",aCONS[i],"\n",sep="" )
+
+ tmp.cnt     <-
+  collapsedBam2counts(
+   BAMFILE      = aBAMS[i],
+   FRAC         = T,
+   MINOVERLAP   = MINOVRL,
+   IGNORE_STR   = F,
+   SENSING      = NULL,
+   RLENRANGE    = RLENRAN,
+   NMISRANGE    = NMRANGE,
+   NORMRANGE    = RLENORM,
+   RMV.SPLICED  = RMV.SPL,
+   RMV.SOFTCLP  = RMV.SCL,
+   ANNOT        = ANN.gr,
+   ANNOT_BTPCOL = "pepap_biotype",
+   ALL.BTP      = unique(RM.mm10.dt[["RM_NAMES"]])
+  )
+ tmp.sum                        <- rowSums(as.matrix( x=tmp.cnt$EXP,rownames="biotype" ))
+ colnames(tmp.cnt[["EXP"]])[-1] <- paste0( gsub( "[-]","_",aCONS[i] ),".",colnames(tmp.cnt$EXP)[-1] )
+
+ frac.dt                            <- merge( frac.dt,tmp.cnt[["EXP"]],by="biotype",all.x=T,sort=F )
+ libs.dt                            <- rbind( libs.dt,data.table( libname=aCONS[i],libsize=tmp.cnt$NORM ) )
+
+ assign( x=paste0(aCONS[i],".frac.dt"),value=tmp.cnt )
+ objs.ls                            <- c( objs.ls,paste0(aCONS[i],".frac.dt") )
+
+ rm( list=c("tmp.sum","tmp.cnt") )
+ gc( verbose=T )
+
+}
+
+#save( list=objs.ls,file="counts.biotype.rda" )
+#save( list=c("frac.dt","libs.dt","ANN.gr","RM.mm10.dt"),file="all_objs.rda" )
+
+fracSums.dt <-
+ merge(
+  unique( RM.mm10.dt[,c("RM_NAMES","dGcats"),with=F] ),
+  frac.dt,
+  by.x="RM_NAMES",by.y="biotype",sort=F,all.y=T
+ )[,lapply(X=.SD,FUN=sum),.SDcols=colnames(frac.dt)[-1],by="dGcats"]
+
+O.DT <- data.table( dCATs=c("miRNA","mRNA","tRNA","rRNA","other","unknown") )
 
 
+
+```
 
