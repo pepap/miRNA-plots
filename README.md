@@ -24,10 +24,10 @@ OUT.dds[["CON"]] <- relevel( x= OUT.dds[["CON"]],ref="SOM" )
 OUT.dds          <- DESeq(      OUT.dds )
 
 dYEL.dt          <- lfcShrink(   dds=OUT.dds,contrast=c("CON","dYEL","SOM"),type="ashr" )
-dYEL.dt          <- as.data.table( x=dYEL.dtkeep.rownames="ID" ) 
+dYEL.dt          <- as.data.table( x=dYEL.dt,keep.rownames="ID" ) 
 dYEL.dt          <- merge(           dYEL.dt,mirAnnot.dt,by="ID",all.x=T,sort=F )
 dGRN.dt          <- lfcShrink(   dds=OUT.dds,contrast=c("CON","dGRN","SOM"),type="ashr" )
-dGRN.dt          <- as.data.table( x=dGRN.dtkeep.rownames="ID" )
+dGRN.dt          <- as.data.table( x=dGRN.dt,keep.rownames="ID" )
 dGRN.dt          <- merge(           dGRN.dt,mirAnnot.dt,by="ID",all.x=T,sort=F )
 
 ```
