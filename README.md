@@ -25,9 +25,9 @@ OUT.dds          <- DESeq(      OUT.dds )
 
 dYEL.dt          <- lfcShrink(   dds=OUT.dds,contrast=c("CON","dYEL","SOM"),type="ashr" )
 dYEL.dt          <- as.data.table( x=dYEL.dt,keep.rownames="ID" ) 
-dYEL.dt          <- merge(           dYEL.dt,mirAnnot.dt,by="ID",all.x=T,sort=F )
+dYEL.dt          <- merge(           dYEL.dt,mirAnnot.pepType.dt,by="ID",all.x=T,sort=F )
 dGRN.dt          <- lfcShrink(   dds=OUT.dds,contrast=c("CON","dGRN","SOM"),type="ashr" )
 dGRN.dt          <- as.data.table( x=dGRN.dt,keep.rownames="ID" )
-dGRN.dt          <- merge(           dGRN.dt,mirAnnot.dt,by="ID",all.x=T,sort=F )
+dGRN.dt          <- merge(           dGRN.dt,mirAnnot.pepType.dt,by="ID",all.x=T,sort=F )
 
 ```
