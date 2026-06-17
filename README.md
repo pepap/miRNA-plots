@@ -49,9 +49,7 @@ source("R-scripts/generateCHplot.R")
 The input counts were calculated as described [previously](https://github.com/pepap/sRNAseq--trim-collapse-map-count). The annotation of the genes was taken from [mouse GENCODE, release M15](https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_mouse/release_M15/gencode.vM15.chr_patch_hapl_scaff.basic.annotation.gtf.gz) and the repeats were annotated using the [RepeatMasker](http://www.repeatmasker.org/).
 
 ```
-library(scales)
-
-source("https://github.com/pepap/sRNAseq--trim-collapse-map-count/blob/799027911cfe166e2817b02a070a35f58df5d46d/03.01.collapsedBam2counts.R")
+source("https://raw.githubusercontent.com/pepap/sRNAseq--trim-collapse-map-count/refs/heads/main/03.01.collapsedBam2counts.R")
 
 ANN.gr <- readRDS( "input_files/ANN.gr.rda" )
 load( "input_files/RM.mm10.dt.rda",verbose=T )
