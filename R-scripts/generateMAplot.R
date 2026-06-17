@@ -1,3 +1,5 @@
+library(data.table)
+
 # FUNCTION :
 # >>>>>>>>>>
 pep.mirMAplot <- function( MIRDT,xTYPE="miRNA",TIT=NULL,lfcLIM=NULL,xLIM=NULL,xLAB=NULL,mirtron=F,COLS=c("blue","red","gray50","limegreen"),PLOT=T ) {
