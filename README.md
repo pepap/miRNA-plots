@@ -157,7 +157,7 @@ The cleavage points’ coordinates (CP) were extracted from their [miRBase 22.1.
  - If there are multiple CPs with the same max counts, keep the canonical one.
  - If there are no data / no reads, keep the canonical one.
 
-The counts were extracted for each miRNA at the position of the newly defined CP with 5nt flanks on each side. The read counts were re-calculated into read densities. The final matrix was achieved as a subtraction between a mutant and its corresponding wild-type control.
+The counts were extracted for each miRNA at the position of the newly defined CP with 5nt flanks on each side. The read counts were re-calculated into read densities. The final matrix was achieved as a subtraction between an ΔIDR sample and its corresponding SOM _Dicer1_ control.
 
 ```
 library(data.table)
