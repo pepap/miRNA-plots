@@ -148,3 +148,126 @@ saveWorkbook(   wb=xwb,file=paste0("Biotype-boxplot-data-",format(Sys.time(), "%
 
 ```
 
+## <ins>miRNAs' fidelity plots</ins>
+### Getting the cleavage points' coordinates
+The cleavage points’ coordinates (CP) were extracted from their [miRBase 22.1.](https://www.mirbase.org/download/mmu.gff3) annotation. The reads of the lengths 21-23nt were selected from each replicate library. The starting position of all reads were summed up in the CP and its vicinity (+/-15nt) and assigned as 5′-CP of miRNAs. Then, the canonical miRBase CPs were re-defined based on our wild-type data:
+ - Position with maximal counts (median among replicates) is assigned as the new CP.
+ - If the new CP is more than 7nt outside the canonical one, keep the canonical one.
+ - If there are multiple CPs with the same max counts, keep the canonical one.
+ - If there are no data / no reads, keep the canonical one.
+The counts were extracted for each miRNA at the position of the newly defined CP with 5nt flanks on each side. The read counts were re-calculated into read densities. The final matrix was achieved as a subtraction between a mutant and its corresponding wild-type control.
+
+```
+library(data.table)
+library(GenomicAlignments)
+
+source("R-scripts/uncollapseBamReads.R")
+
+load( "input_files/mirAnnot.pepType.dt.rda",verbose=T )
+
+aBAMS <- c(
+"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/04.dG-A1/dG-A1.se.Aligned.sortedByCoord.out.bam",
+"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/05.dG-B2/dG-B2.se.Aligned.sortedByCoord.out.bam",
+"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/06.dG-C4/dG-C4.se.Aligned.sortedByCoord.out.bam",
+"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/10.SOM-4/SOM-4.se.Aligned.sortedByCoord.out.bam",
+"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/11.SOM-11/SOM-11.se.Aligned.sortedByCoord.out.bam",
+"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/12.SOM-12/SOM-12.se.Aligned.sortedByCoord.out.bam",
+"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/13.dY-D1/dY-D1.se.Aligned.sortedByCoord.out.bam",
+"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/14.dY-A3/dY-A3.se.Aligned.sortedByCoord.out.bam",
+"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/15.dY-A2/dY-A2.se.Aligned.sortedByCoord.out.bam"
+# "/path/to/dGRN.r1_collapsed.bam","/path/to/dGRN.r2_collapsed.bam","/path/to/dGRN.r3_collapsed.bam",
+# "/path/to/SOM.r1_collapsed.bam", "/path/to/SOM.r2_collapsed.bam", "/path/to/SOM.r3_collapsed.bam",
+# "/path/to/dYEL.r1_collapsed.bam","/path/to/dYEL.r2_collapsed.bam","/path/to/dYEL.r3_collapsed.bam"
+)
+aCONS <- c( "dGRN.r1","dGRN.r2","dGRN.r3", "SOM.r1","SOM.r2","SOM.r3", "dYEL.r1","dYEL.r2","dYEL.r3" )
+
+ mirAnnot.pepType.dt[["CleavagePoint"]]                  <- as.numeric("")
+ mirAnnot.pepType.dt[  det.STR=="5p" & strand=="+" ][["CleavagePoint"]] <-
+  mirAnnot.pepType.dt[ det.STR=="5p" & strand=="+" , start ] 
+ mirAnnot.pepType.dt[  det.STR=="3p" & strand=="+" ][["CleavagePoint"]] <-
+  mirAnnot.pepType.dt[ det.STR=="3p" & strand=="+" , start ]
+ mirAnnot.pepType.dt[  det.STR=="3p" & strand=="-" ][["CleavagePoint"]] <-
+  mirAnnot.pepType.dt[ det.STR=="3p" & strand=="-" ,   end ]
+ mirAnnot.pepType.dt[  det.STR=="5p" & strand=="-" ][["CleavagePoint"]] <-
+  mirAnnot.pepType.dt[ det.STR=="5p" & strand=="-" ,   end ]
+
+#save( mirAnnot.pepType.dt,file="mirAnnot.pepType-CPs-SA.dt.rda" )
+
+RLRAN=c(21,23)
+ONAME=paste0(RLRAN[1],"to",RLRAN[2],"nt")
+
+DELTA=15
+
+# @pepap : store the CP +/- DELTA flank-region as the GRanges
+CPs.gr        <- GRanges( mirAnnot.pepType.dt[ , paste(chr,":",CleavagePoint-DELTA,"-",CleavagePoint+DELTA,":",strand,sep="") ], ID=mirAnnot.pepType.dt[ , ID ] )
+CPs.5p.fwd.gr <- CPs.gr[ as.character(strand(CPs.gr))=="+" & ( mcols(CPs.gr)[["ID"]] %in% mirAnnot.pepType.dt[ det.STR=="5p", ID ] ) ]
+CPs.5p.rev.gr <- CPs.gr[ as.character(strand(CPs.gr))=="-" & ( mcols(CPs.gr)[["ID"]] %in% mirAnnot.pepType.dt[ det.STR=="5p", ID ] ) ]
+CPs.3p.fwd.gr <- CPs.gr[ as.character(strand(CPs.gr))=="+" & ( mcols(CPs.gr)[["ID"]] %in% mirAnnot.pepType.dt[ det.STR=="3p", ID ] ) ]
+CPs.3p.rev.gr <- CPs.gr[ as.character(strand(CPs.gr))=="-" & ( mcols(CPs.gr)[["ID"]] %in% mirAnnot.pepType.dt[ det.STR=="3p", ID ] ) ]
+
+cat("\n",sep="")
+libSize.vec <- c()
+out.objs    <- c()
+for ( i in seq_along(aBAMS) ) {
+
+ cat( " >> ", aCONS[i]," : <<\n",sep="" )
+
+print("check-01")
+ tmp.ga     <- uncollapseBamReads( BAMfile=aBAMS[i],xPAR=ScanBamParam( tag=c("HI","NH","nM") ) )
+ tmp.ga     <- tmp.ga[ njunc(tmp.ga)==0 ]
+print("check-02")
+ tmp.gr               <- as( tmp.ga,"GRanges" )
+ tmp.gr               <- tmp.gr[ ( width(tmp.gr) >= RLRAN[1] ) & ( width(tmp.gr) <= RLRAN[2] ) ]
+
+ libSize.vec          <- append( libSize.vec,sum( mcols(tmp.gr)[["HI"]]==1 ) )
+
+ tmp.5p.fwd.gr        <- tmp.gr[ as.character(strand(tmp.gr))=="+" ]
+   end(tmp.5p.fwd.gr) <- start(tmp.5p.fwd.gr)
+ tmp.5p.rev.gr        <- tmp.gr[ as.character(strand(tmp.gr))=="-" ]
+ start(tmp.5p.rev.gr) <-   end(tmp.5p.rev.gr)
+ tmp.3p.fwd.gr        <- tmp.gr[ as.character(strand(tmp.gr))=="+" ]
+   end(tmp.3p.fwd.gr) <- start(tmp.3p.fwd.gr)
+ tmp.3p.rev.gr        <- tmp.gr[ as.character(strand(tmp.gr))=="-" ]
+ start(tmp.3p.rev.gr) <-   end(tmp.3p.rev.gr)
+print("check-03")
+ tmp.5p.fwd.cv <- coverage( tmp.5p.fwd.gr )
+ tmp.5p.rev.cv <- coverage( tmp.5p.rev.gr )
+ tmp.3p.fwd.cv <- coverage( tmp.3p.fwd.gr )
+ tmp.3p.rev.cv <- coverage( tmp.3p.rev.gr )
+print("check-04")
+ tmp.5p.fwd.cv <- tmp.5p.fwd.cv[ CPs.5p.fwd.gr ]
+ tmp.5p.rev.cv <- tmp.5p.rev.cv[ CPs.5p.rev.gr ]
+ tmp.3p.fwd.cv <- tmp.3p.fwd.cv[ CPs.3p.fwd.gr ]
+ tmp.3p.rev.cv <- tmp.3p.rev.cv[ CPs.3p.rev.gr ]
+print("check-05")
+ tmp.dt     <- rbind( as.data.table( tmp.5p.fwd.cv ),as.data.table( tmp.5p.rev.cv ),as.data.table( tmp.3p.fwd.cv ),as.data.table( tmp.3p.rev.cv ) )
+
+print("check-06")
+ tmp.mat <- matrix(
+  data=tmp.dt[,value],ncol=(2*DELTA)+1,byrow=T,
+  dimnames=list( c(mcols(CPs.5p.fwd.gr)[["ID"]],mcols(CPs.5p.rev.gr)[["ID"]],mcols(CPs.3p.fwd.gr)[["ID"]],mcols(CPs.3p.rev.gr)[["ID"]]),c() )
+ )
+ out.mat <- tmp.mat[ mirAnnot.dt[ strand=="+" , ID ] , ]
+ tmp.mat <- tmp.mat[ mirAnnot.dt[ strand=="-" , ID ] , rev(seq(ncol(tmp.mat))) ]
+ out.mat <- rbind( out.mat,tmp.mat )
+ colnames(out.mat) <- seq( from=(-1)*DELTA,to=(+1)*DELTA )
+
+print("check-07")
+ assign( x=paste( aCONS[i],".CPs.mat",sep="" ),value=out.mat )
+ out.objs    <- append( out.objs,paste( aCONS[i],".CPs.mat",sep="" ) )
+
+cat("\n",sep="")
+
+}
+cat("\n",sep="")
+
+#tmp.dt <- data.table( LIBS=aCONS,MAPPED=libSize.vec )
+#assign(  x=paste("ALL-SA.",ONAME,".libSize.dt",sep=""),value=tmp.dt )
+#save( list=paste("ALL-SA.",ONAME,".libSize.dt",sep=""),file=paste("ALL-SA.",ONAME,".libSize.dt.rda",sep="") )
+
+#save( list=out.objs,file=paste("ALL-SA-CPs.",ONAME,"-",pepDate(),".rda",sep="") )
+
+```
+### 
+
+
