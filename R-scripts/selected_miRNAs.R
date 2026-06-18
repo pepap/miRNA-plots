@@ -45,3 +45,5 @@ IDR.mirnas <-
   "mmu-miR-674-5p","mmu-miR-299a-5p","mmu-miR-196a-5p","mmu-miR-30c-5p","mmu-miR-142a-5p"
   ),
  )
+
+cat( "\n  Selected miRNAs \"IDR.mirnas\" loaded successfully \n\n",sep="" )
