@@ -162,10 +162,6 @@ The counts were extracted for each miRNA at the position of the newly defined CP
 ```
 library(data.table)
 library(GenomicAlignments)
-library(ggplot2)
-library(ggpubr)
-library(rstatix) 
-library(scales)
 
 source("R-scripts/uncollapseBamReads.R")
 
