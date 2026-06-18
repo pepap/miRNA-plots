@@ -162,24 +162,19 @@ The counts were extracted for each miRNA at the position of the newly defined CP
 ```
 library(data.table)
 library(GenomicAlignments)
+library(ggplot2)
+library(ggpubr)
+library(rstatix) 
+library(scales)
 
 source("R-scripts/uncollapseBamReads.R")
 
 load( "input_files/mirAnnot.pepType.dt.rda",verbose=T )
 
 aBAMS <- c(
-"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/04.dG-A1/dG-A1.se.Aligned.sortedByCoord.out.bam",
-"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/05.dG-B2/dG-B2.se.Aligned.sortedByCoord.out.bam",
-"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/06.dG-C4/dG-C4.se.Aligned.sortedByCoord.out.bam",
-"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/10.SOM-4/SOM-4.se.Aligned.sortedByCoord.out.bam",
-"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/11.SOM-11/SOM-11.se.Aligned.sortedByCoord.out.bam",
-"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/12.SOM-12/SOM-12.se.Aligned.sortedByCoord.out.bam",
-"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/13.dY-D1/dY-D1.se.Aligned.sortedByCoord.out.bam",
-"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/14.dY-A3/dY-A3.se.Aligned.sortedByCoord.out.bam",
-"/storage/brno12-cerit/home/pepap/brno1/Valeria.Buccheri/21.mESC--Dicer-loop-mutants--20250411/BAM/15.dY-A2/dY-A2.se.Aligned.sortedByCoord.out.bam"
-# "/path/to/dGRN.r1_collapsed.bam","/path/to/dGRN.r2_collapsed.bam","/path/to/dGRN.r3_collapsed.bam",
-# "/path/to/SOM.r1_collapsed.bam", "/path/to/SOM.r2_collapsed.bam", "/path/to/SOM.r3_collapsed.bam",
-# "/path/to/dYEL.r1_collapsed.bam","/path/to/dYEL.r2_collapsed.bam","/path/to/dYEL.r3_collapsed.bam"
+ "/path/to/dGRN.r1_collapsed.bam","/path/to/dGRN.r2_collapsed.bam","/path/to/dGRN.r3_collapsed.bam",
+ "/path/to/SOM.r1_collapsed.bam", "/path/to/SOM.r2_collapsed.bam", "/path/to/SOM.r3_collapsed.bam",
+ "/path/to/dYEL.r1_collapsed.bam","/path/to/dYEL.r2_collapsed.bam","/path/to/dYEL.r3_collapsed.bam"
 )
 aCONS <- c( "dGRN.r1","dGRN.r2","dGRN.r3", "SOM.r1","SOM.r2","SOM.r3", "dYEL.r1","dYEL.r2","dYEL.r3" )
 
@@ -193,7 +188,7 @@ aCONS <- c( "dGRN.r1","dGRN.r2","dGRN.r3", "SOM.r1","SOM.r2","SOM.r3", "dYEL.r1"
  mirAnnot.pepType.dt[  det.STR=="5p" & strand=="-" ][["CleavagePoint"]] <-
   mirAnnot.pepType.dt[ det.STR=="5p" & strand=="-" ,   end ]
 
-#save( mirAnnot.pepType.dt,file="mirAnnot.pepType-CPs-SA.dt.rda" )
+save( mirAnnot.pepType.dt,file="FD01.mirAnnot.pepType-CPs-SA.dt.rda" )
 
 RLRAN=c(21,23)
 ONAME=paste0(RLRAN[1],"to",RLRAN[2],"nt")
@@ -207,17 +202,14 @@ CPs.5p.rev.gr <- CPs.gr[ as.character(strand(CPs.gr))=="-" & ( mcols(CPs.gr)[["I
 CPs.3p.fwd.gr <- CPs.gr[ as.character(strand(CPs.gr))=="+" & ( mcols(CPs.gr)[["ID"]] %in% mirAnnot.pepType.dt[ det.STR=="3p", ID ] ) ]
 CPs.3p.rev.gr <- CPs.gr[ as.character(strand(CPs.gr))=="-" & ( mcols(CPs.gr)[["ID"]] %in% mirAnnot.pepType.dt[ det.STR=="3p", ID ] ) ]
 
-cat("\n",sep="")
 libSize.vec <- c()
 out.objs    <- c()
 for ( i in seq_along(aBAMS) ) {
 
  cat( " >> ", aCONS[i]," : <<\n",sep="" )
 
-print("check-01")
- tmp.ga     <- uncollapseBamReads( BAMfile=aBAMS[i],xPAR=ScanBamParam( tag=c("HI","NH","nM") ) )
- tmp.ga     <- tmp.ga[ njunc(tmp.ga)==0 ]
-print("check-02")
+ tmp.ga               <- uncollapseBamReads( BAMfile=aBAMS[i],xPAR=ScanBamParam( tag=c("HI","NH","nM") ) )
+ tmp.ga               <- tmp.ga[ njunc(tmp.ga)==0 ]
  tmp.gr               <- as( tmp.ga,"GRanges" )
  tmp.gr               <- tmp.gr[ ( width(tmp.gr) >= RLRAN[1] ) & ( width(tmp.gr) <= RLRAN[2] ) ]
 
@@ -231,45 +223,44 @@ print("check-02")
    end(tmp.3p.fwd.gr) <- start(tmp.3p.fwd.gr)
  tmp.3p.rev.gr        <- tmp.gr[ as.character(strand(tmp.gr))=="-" ]
  start(tmp.3p.rev.gr) <-   end(tmp.3p.rev.gr)
-print("check-03")
- tmp.5p.fwd.cv <- coverage( tmp.5p.fwd.gr )
- tmp.5p.rev.cv <- coverage( tmp.5p.rev.gr )
- tmp.3p.fwd.cv <- coverage( tmp.3p.fwd.gr )
- tmp.3p.rev.cv <- coverage( tmp.3p.rev.gr )
-print("check-04")
- tmp.5p.fwd.cv <- tmp.5p.fwd.cv[ CPs.5p.fwd.gr ]
- tmp.5p.rev.cv <- tmp.5p.rev.cv[ CPs.5p.rev.gr ]
- tmp.3p.fwd.cv <- tmp.3p.fwd.cv[ CPs.3p.fwd.gr ]
- tmp.3p.rev.cv <- tmp.3p.rev.cv[ CPs.3p.rev.gr ]
-print("check-05")
- tmp.dt     <- rbind( as.data.table( tmp.5p.fwd.cv ),as.data.table( tmp.5p.rev.cv ),as.data.table( tmp.3p.fwd.cv ),as.data.table( tmp.3p.rev.cv ) )
 
-print("check-06")
- tmp.mat <- matrix(
-  data=tmp.dt[,value],ncol=(2*DELTA)+1,byrow=T,
-  dimnames=list( c(mcols(CPs.5p.fwd.gr)[["ID"]],mcols(CPs.5p.rev.gr)[["ID"]],mcols(CPs.3p.fwd.gr)[["ID"]],mcols(CPs.3p.rev.gr)[["ID"]]),c() )
- )
- out.mat <- tmp.mat[ mirAnnot.dt[ strand=="+" , ID ] , ]
- tmp.mat <- tmp.mat[ mirAnnot.dt[ strand=="-" , ID ] , rev(seq(ncol(tmp.mat))) ]
- out.mat <- rbind( out.mat,tmp.mat )
- colnames(out.mat) <- seq( from=(-1)*DELTA,to=(+1)*DELTA )
+ tmp.5p.fwd.cv        <- coverage( tmp.5p.fwd.gr )
+ tmp.5p.rev.cv        <- coverage( tmp.5p.rev.gr )
+ tmp.3p.fwd.cv        <- coverage( tmp.3p.fwd.gr )
+ tmp.3p.rev.cv        <- coverage( tmp.3p.rev.gr )
 
-print("check-07")
+ tmp.5p.fwd.cv        <- tmp.5p.fwd.cv[ CPs.5p.fwd.gr ]
+ tmp.5p.rev.cv        <- tmp.5p.rev.cv[ CPs.5p.rev.gr ]
+ tmp.3p.fwd.cv        <- tmp.3p.fwd.cv[ CPs.3p.fwd.gr ]
+ tmp.3p.rev.cv        <- tmp.3p.rev.cv[ CPs.3p.rev.gr ]
+ tmp.dt               <- rbind( as.data.table( tmp.5p.fwd.cv ),as.data.table( tmp.5p.rev.cv ),as.data.table( tmp.3p.fwd.cv ),as.data.table( tmp.3p.rev.cv ) )
+
+ tmp.mat              <-
+  matrix(
+   data=tmp.dt[,value],ncol=(2*DELTA)+1,byrow=T,
+   dimnames=list( c(mcols(CPs.5p.fwd.gr)[["ID"]],mcols(CPs.5p.rev.gr)[["ID"]],mcols(CPs.3p.fwd.gr)[["ID"]],mcols(CPs.3p.rev.gr)[["ID"]]),c() )
+  )
+ out.mat              <- tmp.mat[ mirAnnot.pepType.dt[ strand=="+" , ID ] , ]
+ tmp.mat              <- tmp.mat[ mirAnnot.pepType.dt[ strand=="-" , ID ] , rev(seq(ncol(tmp.mat))) ]
+ out.mat              <- rbind( out.mat,tmp.mat )
+ colnames(out.mat)    <- seq( from=(-1)*DELTA,to=(+1)*DELTA )
+
  assign( x=paste( aCONS[i],".CPs.mat",sep="" ),value=out.mat )
- out.objs    <- append( out.objs,paste( aCONS[i],".CPs.mat",sep="" ) )
-
-cat("\n",sep="")
+ out.objs             <- append( out.objs,paste( aCONS[i],".CPs.mat",sep="" ) )
 
 }
-cat("\n",sep="")
 
 #tmp.dt <- data.table( LIBS=aCONS,MAPPED=libSize.vec )
 #assign(  x=paste("ALL-SA.",ONAME,".libSize.dt",sep=""),value=tmp.dt )
 #save( list=paste("ALL-SA.",ONAME,".libSize.dt",sep=""),file=paste("ALL-SA.",ONAME,".libSize.dt.rda",sep="") )
 
-#save( list=out.objs,file=paste("ALL-SA-CPs.",ONAME,"-",pepDate(),".rda",sep="") )
+save( list=out.objs,file=paste("FD02.ALL-SA-CPs.",ONAME,".rda",sep="") )
 
 ```
-### 
 
+### Fidelity boxplots
+
+```
+source("R-scripts/generateFidelityBoxplot.R")
+```
 
