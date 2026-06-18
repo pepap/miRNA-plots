@@ -71,11 +71,11 @@ deffCP <- function( iMAT,SEL=as.character(seq(-10,+10)),OUT=5,ANNOT=mirAnnot.pep
      ZERO <- max( LSEL )
      ZERO <- seq_along(LSEL)[ LSEL==ZERO ]
      if ( length(ZERO)>1 ) {
-      print( c(ZERO,tmp.rnw) )
+#      print( c(ZERO,tmp.rnw) )
       return( CANON+ADD )
      }
      if ( abs(CANON-ZERO)>OUT ) {
-      print( c(ZERO,tmp.rnw) )
+#      print( c(ZERO,tmp.rnw) )
       return( CANON+ADD )
      } else               {
       return( ZERO +ADD )
@@ -178,8 +178,8 @@ cat( "\n ** II. center CP-matrices to new CPs & normalize **\n\n",sep="" )
 
   cat( " => ",iM,"\n",sep="" )
   tmp.mat <- normMat( iMAT=deffCPcenter( iMAT=get(iM),CP.DT=IDR.CPs.dt,EXPAND=5 ) )
-  print(           dim(tmp.mat)  )
-  print( table(rowSums(tmp.mat)) )
+#  print(           dim(tmp.mat)  )
+#  print( table(rowSums(tmp.mat)) )
   assign( x=sub( "[.]CPs[.]mat$",".CPs.normCent.mat",iM ),value=tmp.mat )
   out.objs <- append( out.objs,sub( "[.]CPs[.]mat$",".CPs.normCent.mat",iM ) )
 
