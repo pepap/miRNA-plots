@@ -151,10 +151,12 @@ saveWorkbook(   wb=xwb,file=paste0("Biotype-boxplot-data-",format(Sys.time(), "%
 ## <ins>miRNAs' fidelity plots</ins>
 ### Getting the cleavage points' coordinates
 The cleavage points’ coordinates (CP) were extracted from their [miRBase 22.1.](https://www.mirbase.org/download/mmu.gff3) annotation. The reads of the lengths 21-23nt were selected from each replicate library. The starting position of all reads were summed up in the CP and its vicinity (+/-15nt) and assigned as 5′-CP of miRNAs. Then, the canonical miRBase CPs were re-defined based on our wild-type data:
+
  - Position with maximal counts (median among replicates) is assigned as the new CP.
  - If the new CP is more than 7nt outside the canonical one, keep the canonical one.
  - If there are multiple CPs with the same max counts, keep the canonical one.
  - If there are no data / no reads, keep the canonical one.
+
 The counts were extracted for each miRNA at the position of the newly defined CP with 5nt flanks on each side. The read counts were re-calculated into read densities. The final matrix was achieved as a subtraction between a mutant and its corresponding wild-type control.
 
 ```
